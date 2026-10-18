@@ -28,23 +28,34 @@ class CityCard extends StatelessWidget {
           children: [
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12.0),
-                  child: Image.asset(
-                    city.assetPath,
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 100,
-                        height: 100,
-                        color: Colors.orange.shade200,
-                        child: const Icon(Icons.image, color: Colors.white),
-                      );
-                    },
-                  ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12.0),
+                child: Image.asset(
+                  city.assetPath,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 100,
+                      height: 100,
+                      color: Colors.orange.shade100,
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.map_outlined, color: Colors.orange, size: 28),
+                          SizedBox(height: 4),
+                          Text(
+                            'NEW',
+                            style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
+              ),
                 Container(
                   width: 100,
                   height: 100,
