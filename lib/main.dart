@@ -7,6 +7,7 @@ import 'hw2/login_screen.dart';
 import 'ui/screens/catalog_screen.dart';
 import 'bloc/books_bloc.dart';
 import 'bloc/books_event.dart';
+import 'data/books_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +41,19 @@ class GoldenRingApp extends StatelessWidget {
             return const LoginScreen();
           }
           return BlocProvider(
-            create: (_) => BooksBloc()..add(BooksLoadRequested()),
+            create: (_) {
+              final bloc = BooksBloc(BooksRepository());
+              print('Создаём BooksBloc');
+              print('UID пользователя: ${snapshot.data!.uid}');
+              
+              bloc.add(UidUpdated(snapshot.data!.uid));
+              print('Отправлено UidUpdated');
+              
+              bloc.add(BooksLoadRequested());
+              print('Отправлено BooksLoadRequested');
+              
+              return bloc;
+            },
             child: const CatalogScreen(),
           );
         },

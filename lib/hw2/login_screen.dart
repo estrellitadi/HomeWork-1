@@ -13,6 +13,34 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   String? _errorMessage;
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  String _getErrorMessage(String code) {
+    switch (code) {
+      case 'user-not-found':
+        return 'Пользователь с таким email не найден';
+      case 'wrong-password':
+        return 'Неверный пароль';
+      case 'email-already-in-use':
+        return 'Этот email уже зарегистрирован';
+      case 'weak-password':
+        return 'Пароль должен содержать минимум 6 символов';
+      case 'invalid-email':
+        return 'Некорректный email';
+      case 'invalid-credential':
+        return 'Неверный email или пароль';
+      case 'too-many-requests':
+        return 'Слишком много попыток. Попробуйте позже';
+      default:
+        return 'Произошла ошибка. Попробуйте ещё раз';
+    }
+  }
+
   Future<void> _signIn() async {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -20,9 +48,8 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
     } on FirebaseAuthException catch (e) {
-      print('Ошибка Firebase: ${e.code}');
       setState(() {
-        _errorMessage = e.code;
+        _errorMessage = _getErrorMessage(e.code);
       });
     }
   }
@@ -35,16 +62,9 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } on FirebaseAuthException catch (e) {
       setState(() {
-        _errorMessage = e.code;
+        _errorMessage = _getErrorMessage(e.code);
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 
   @override
@@ -82,21 +102,50 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Ошибка: $_errorMessage',
+                        _errorMessage!,
                         style: const TextStyle(color: Colors.red, fontSize: 14),
                       ),
                     ),
                   ],
                 ),
               ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _signIn,
-              child: const Text('Войти'),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: 200,
+              child: ElevatedButton(
+                onPressed: _signIn,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Войти',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
-            OutlinedButton(
-              onPressed: _signUp,
-              child: const Text('Зарегистрироваться'),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: 200,
+              child: OutlinedButton(
+                onPressed: _signUp,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.orange,
+                  side: const BorderSide(color: Colors.orange, width: 2),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Зарегистрироваться',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
           ],
         ),
