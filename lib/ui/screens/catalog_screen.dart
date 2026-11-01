@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/city.dart';
+import '../../bloc/books_bloc.dart';
+import '../../bloc/books_state.dart';
+import '../../bloc/books_event.dart';
 import '../widgets/city_card.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -12,8 +16,6 @@ class CatalogScreen extends StatefulWidget {
 }
 
 class _CatalogScreenState extends State<CatalogScreen> {
-  final _citiesStream = FirebaseFirestore.instance.collection('cities').snapshots();
-
   final Set<String> _likedCityIds = <String>{};
   bool _onlyFavorites = false;
 
@@ -21,89 +23,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
   final _titleController = TextEditingController();
   final _cityController = TextEditingController();
   final _descriptionController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _seedInitialData(); 
-  }
-
-Future<void> _seedInitialData() async {
-  final snapshot = await FirebaseFirestore.instance.collection('cities').get();
-  
-  if (snapshot.docs.isEmpty) {
-    final initialCities = [
-      {
-        'title': 'Свято-Троицкая Сергиева Лавра',
-        'description': 'Крупнейший мужской монастырь Русской православной церкви с многовековой историей. Основан преподобным Сергием Радонежским.',
-        'cityName': 'Сергиев Посад',
-        'assetPath': 'assets/1.png',
-        'displayLetter': 'С',
-        'type': 'ancient',
-      },
-      {
-        'title': 'Переславский Кремль и Спасо-Преображенский собор',
-        'description': 'Древнейший белокаменный храм Руси, заложенный Юрием Долгоруким. Город на берегу живописного Плещеева озера.',
-        'cityName': 'Переславль-Залесский',
-        'assetPath': 'assets/2.png',
-        'displayLetter': 'П',
-        'type': 'ancient',
-      },
-      {
-        'title': 'Ростовский Кремль (Митрополичий двор)',
-        'description': 'Величественная резиденция митрополита с белокаменными стенами и знаменитыми ростовскими звонами. Здесь снимали фильм «Иван Васильевич меняет профессию».',
-        'cityName': 'Ростов Великий',
-        'assetPath': 'assets/3.png',
-        'displayLetter': 'Р',
-        'type': 'ancient',
-      },
-      {
-        'title': 'Костромской Ипатьевский монастырь',
-        'description': 'Знаменитая «колыбель» династии Романовых. Именно отсюда Михаил Федорович был призван на российский престол.',
-        'cityName': 'Кострома',
-        'assetPath': 'assets/4.png',
-        'displayLetter': 'К',
-        'type': 'ancient',
-      },
-      {
-        'title': 'Волжская набережная и Стрелка',
-        'description': 'Столица Золотого кольца с тысячелетней историей. Место слияния Волги и Которосли, украшенное поющими фонтанами и старинными храмами.',
-        'cityName': 'Ярославль',
-        'assetPath': 'assets/5.png',
-        'displayLetter': 'В',
-        'type': 'ancient',
-      },
-      {
-        'title': 'Торговые ряды и Суздальский Кремль',
-        'description': 'Город-музей под открытым небом, где полностью сохранился дух древней Руси. Славится деревянным зодчеством и медовухой.',
-        'cityName': 'Суздаль',
-        'assetPath': 'assets/6.png',
-        'displayLetter': 'Т',
-        'type': 'ancient',
-      },
-      {
-        'title': 'Золотые ворота и Успенский собор',
-        'description': 'Уникальный памятник древнерусской фортификационной архитектуры XII века и величественный собор, где венчались на княжение великие князья.',
-        'cityName': 'Владимир',
-        'assetPath': 'assets/7.png',
-        'displayLetter': 'З',
-        'type': 'ancient',
-      },
-      {
-        'title': 'Ивановские ситцы и Дом-музей Бубнова',
-        'description': 'Самый молодой город маршрута, известный своей текстильной промышленностью, уникальной архитектурой конструктивизма.',
-        'cityName': 'Иваново',
-        'assetPath': 'assets/8.png',
-        'displayLetter': 'И',
-        'type': 'industrial',
-      },
-    ];
-
-    for (final cityData in initialCities) {
-      await FirebaseFirestore.instance.collection('cities').add(cityData);
-    }
-  }
-}
 
   @override
   void dispose() {
@@ -236,30 +155,32 @@ Future<void> _seedInitialData() async {
             ),
 
           Expanded(
-            child: StreamBuilder(
-              stream: _citiesStream,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+            child: BlocBuilder<BooksBloc, BooksState>(
+              builder: (context, state) {
+
+                if (state is BooksLoadInProgress) {
                   return const Center(child: CircularProgressIndicator(color: Colors.orange));
                 }
                 
-                if (snapshot.hasError) {
+                if (state is BooksLoadFailure) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Ошибка: ${snapshot.error}', style: const TextStyle(color: Colors.red)),
+                        Text('Ошибка: ${state.message}', style: const TextStyle(color: Colors.red)),
                         const SizedBox(height: 12),
-                        if (snapshot.error.toString().contains('permission-denied'))
-                          const Text('Проверь Rules в консоли Firebase!', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<BooksBloc>().add(BooksLoadRequested());
+                          },
+                          child: const Text('Обновить'),
+                        ),
                       ],
                     ),
                   );
                 }
 
-                final docs = snapshot.data!.docs;
-                final cities = docs.map((doc) => City.fromFirestore(doc)).toList();
-                cities.sort((a, b) => a.cityName.compareTo(b.cityName)); 
+                final cities = (state as BooksLoadSuccess).books;
 
                 final visibleCities = _onlyFavorites
                     ? cities.where((city) => _likedCityIds.contains(city.id)).toList()

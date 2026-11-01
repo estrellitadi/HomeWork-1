@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'firebase_options.dart';
 import 'hw2/login_screen.dart';
 import 'ui/screens/catalog_screen.dart';
+import 'bloc/books_bloc.dart';
+import 'bloc/books_event.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +39,10 @@ class GoldenRingApp extends StatelessWidget {
           if (snapshot.data == null) {
             return const LoginScreen();
           }
-          return const CatalogScreen();
+          return BlocProvider(
+            create: (_) => BooksBloc()..add(BooksLoadRequested()),
+            child: const CatalogScreen(),
+          );
         },
       ),
     );
