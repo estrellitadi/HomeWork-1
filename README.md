@@ -1,17 +1,13 @@
-# my_app
+# Каталог достопримечательностей Золотого кольца России
 
-A new Flutter project.
+Приложение для промежуточной аттестации Р1.
 
-## Getting Started
+## Функциональность
+- Вход и регистрация через Firebase Authentication
+- Каталог из Firestore с поиском
+- Лайки, сохраняющиеся в Firestore
+- Экран деталей с удалением
+- Архитектура BLoC с репозиторием
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Дополнительная опция
+- Поиск по названию
